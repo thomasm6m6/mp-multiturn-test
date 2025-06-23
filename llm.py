@@ -8,36 +8,35 @@ openai = OpenAI()
 with open("system_prompt.txt") as f:
   system_prompt = f.read()
 
-# follows OpenAI's `messages` schema
-history = [{
+messages = [{
   "role": "system",
   "content": system_prompt
 }]
 
 def add_prompt(msg):
-  history.append({
+  messages.append({
     "role": "user",
     "content": msg
   })
 
 def add_response(msg):
-  history.append({
+  messages.append({
     "role": "assistant",
     "content": msg
   })
 
-def llm(messages=history, model="gpt-4.1-nano"):
+def llm(messages=messages, model="gpt-4.1-nano"):
   return openai.responses.create(
     model=model,
     input=messages,
-    reasoning={"effort": "low"}
+    # reasoning={"effort": "low"}
   ).output_text
 
 while True:
   try:
     prompt = input("> ")
     add_prompt(prompt)
-    response = llm(model="o4-mini")
+    response = llm()
     add_response(response)
 
     print(response)
