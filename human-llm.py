@@ -23,6 +23,11 @@ system_prompt = load_system_prompt()
 
 load_dotenv()
 
+# openai = OpenAI(
+#   base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+#   api_key=os.getenv("GEMINI_API_KEY")
+# )
+
 openai = OpenAI()
 
 messages = [{
@@ -43,17 +48,19 @@ def add_response(msg):
   })
 
 def llm(messages=messages, model="gpt-4.1-nano"):
-  return openai.responses.create(
+  response = openai.chat.completions.create(
     model=model,
-    input=messages,
-    # reasoning={"effort": "low"}
-  ).output_text
+    messages=messages,
+    reasoning_effort="high"
+  )
+  return response.choices[0].message.content
+  # reasoning={"effort": "low"}
 
 while True:
   try:
     prompt = input("> ")
     add_prompt(prompt)
-    response = llm()
+    response = llm(model=os.getenv("MODEL", "o4-mini"))
     add_response(response)
 
     print(response)
