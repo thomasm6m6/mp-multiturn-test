@@ -26,15 +26,15 @@ def load_system_prompt(filename):
 
   return system_prompt_tmpl.render(data)
 
-defender_system_prompt = load_system_prompt("resources/defender_system_prompt.txt")
-attacker_system_prompt = load_system_prompt("resources/attacker_system_prompt.txt")
+blue_system_prompt = load_system_prompt("resources/system_prompt.txt")
+red_system_prompt = load_system_prompt("resources/attacker_system_prompt2.txt")
 
 load_dotenv()
 
 openai = OpenAI()
 response = openai.moderations.create(
   model="omni-moderation-latest",
-  input=defender_system_prompt
+  input=blue_system_prompt
 )
 if response.results[0].flagged:
   print(f"FLAGGED: {response}")
@@ -84,11 +84,10 @@ class OpenAIAgent(Agent):
     super().__init__("developer", system_prompt)
     self._default_model = model
 
-    # global openai
-    # if openai is None:
-      # openai = OpenAI()
-    # self.openai = openai
-    self.openai = OpenAI()
+    global openai
+    if openai is None:
+      openai = OpenAI()
+    self.openai = openai
 
   @property
   def default_model(self) -> str:
@@ -128,25 +127,24 @@ class GeminiAgent(Agent):
       raise ValueError("Gemini returned nil")
     return content
 
-defender = OpenAIAgent(defender_system_prompt, model="gpt-4.1")
-attacker = OpenAIAgent(attacker_system_prompt, model="o3")
+# TODO: class AnthropicAgent(Agent):
 
-log(f"Defender is {defender.default_model}, Attacker is {attacker.default_model}\n")
+blue = OpenAIAgent(blue_system_prompt, model="gpt-4.1-nano")
+red = OpenAIAgent(red_system_prompt, model="o4-mini")
+
+log(f"Blue is {blue.default_model}, Red is {red.default_model}\n")
 
 opening_msg = "Hi! I'm Blue"
-response = attacker.run(opening_msg)
-defender.add_message("assistant", opening_msg)
+response = red.run(opening_msg)
+blue.add_message("assistant", opening_msg)
 
 log(f"BLUE: {opening_msg}\n")
 log(f"RED: {response}\n")
 
 for i in range(5):
-  counter = defender.run(response)
-  response = attacker.run(counter)
+  counter = blue.run(response)
+  response = red.run(counter)
 
   if i > 0: print("---\n")
   log(f"BLUE: {counter}\n")
   log(f"RED: {response}\n")
-
-  if 'xyzzy' in response.lower():
-    break
