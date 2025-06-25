@@ -4,11 +4,9 @@ A simple program to facilitate conversation with an LLM, for redteaming the miss
 
 ```sh
 pip install -r requirements.txt
-python3 llm.py
+python3 llm-llm.py
+python3 human-llm.py
 ```
 
-You may use the environment variables `SYSTEM_PROMPT`, `ROBOT_XML`, and `FARM_GEOJSON` to specify alternative files to be used, other than the default ones in `resources/`. I.E.:
-
-```sh
-SYSTEM_PROMPT=my_prompt.txt ROBOT_XML=my_robot.xml FARM_GEOJSON=my_farm.geojson python3 llm.py
-```
+`llm-llm.py` runs two models against each other.
+`human-llm.py` enters an interactive chat mode with one model.
