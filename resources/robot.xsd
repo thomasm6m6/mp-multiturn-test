@@ -180,7 +180,7 @@
     <!-- ConditionalAction type -->
     <xs:complexType name="ConditionalActionsType">
         <xs:sequence>
-            <xs:element name="Conditional" type="ConditionalType" minOccurs="1" maxOccurs="unbounded"/>
+            <xs:element name="Conditional" type="ConditionalType" minOccurs="1" maxOccurs="2"/>
             <xs:element name="Sequence" type="ConditionalSequenceType" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>

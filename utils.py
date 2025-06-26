@@ -6,22 +6,34 @@ from abc import ABC, abstractmethod
 from openai import OpenAI
 from jinja2 import Environment, FileSystemLoader
 
+total_cost = 0
+
 ### LOGGING
+
+log_queue = []
 
 os.makedirs("logs", exist_ok=True)
 LOGFILE = open(f"logs/{int(time.time())}.txt", 'w')
 
-def close_logfile():
+def cleanup():
+  log("\nCleanup messages:")
+  for (msg, kwargs) in log_queue:
+    log(msg, **kwargs)
+  log(f"Total cost used: ${round(total_cost, 3)}")
   LOGFILE.close()
 
-atexit.register(close_logfile)
+atexit.register(cleanup)
 
-def log(msg):
-  cutoff = 1024
-  print(msg[:cutoff])
-  if len(msg) > cutoff:
-    print("\n[output elided for length. see log file]\n")
+def log(msg, file_only=False):
   print(msg, file=LOGFILE)
+  if not file_only:
+    cutoff = 1024
+    print(msg[:cutoff])
+    if len(msg) > cutoff:
+      print("\n[output elided for length. see log file]\n")
+
+def log_later(msg, **kwargs):
+  log_queue.append((msg, kwargs))
 
 ### LLMs
 
@@ -70,6 +82,8 @@ class Agent(ABC):
       messages=self.messages + [{"role": "user", "content": prompt}],
       **args
     )
+    log_later(model_costs(model, response.usage.prompt_tokens,
+      response.usage.completion_tokens), file_only=True)
     content = response.choices[0].message.content
     if content is None:
       raise ValueError("LLM returned nil")
@@ -213,3 +227,26 @@ def load_system_prompt(filename):
     }
 
   return system_prompt_tmpl.render(data)
+
+token_costs = {
+  "o4-mini":      {"input": 1.1, "output": 4.4},
+  "o3":           {"input": 2.0, "output": 8.0},
+  "gpt-4.1":      {"input": 2.0, "output": 8.0},
+  "gpt-4.1-mini": {"input": 0.4, "output": 1.6},
+  "gpt-4.1-nano": {"input": 0.1, "output": 0.4},
+}
+
+def model_costs(model, input_toks, output_toks):
+  if model not in token_costs:
+    return f"Error calculating cost: unrecognized model '{model}'"
+  global total_cost
+  input_cost = token_costs[model]["input"] * input_toks / 1_000_000
+  output_cost = token_costs[model]["output"] * output_toks / 1_000_000
+  total_cost += input_cost + output_cost
+  return (
+    f"Input tokens: {input_toks}\n"
+    f"Input cost: ${input_cost}\n"
+    f"Output tokens: {output_toks}\n"
+    f"Output cost: ${output_cost}\n"
+    f"Total cost: ${input_cost + output_cost}"
+  )
