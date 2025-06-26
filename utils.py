@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import time
 import atexit
 from abc import ABC, abstractmethod
@@ -9,6 +8,7 @@ from jinja2 import Environment, FileSystemLoader
 
 ### LOGGING
 
+os.makedirs("logs", exist_ok=True)
 LOGFILE = open(f"logs/{int(time.time())}.txt", 'w')
 
 def close_logfile():
@@ -200,15 +200,15 @@ def instructions_ok(instructions):
 ### UTILITIES
 
 def load_system_prompt(filename):
-  robot_xml_file = os.getenv("ROBOT_XML", "resources/robot.xml")
+  robot_xsd_file = os.getenv("ROBOT_XSD", "resources/robot.xsd")
   farm_geojson_file = os.getenv("FARM_GEOJSON", "resources/farm.geojson")
 
   env = Environment(loader=FileSystemLoader("."))
   system_prompt_tmpl = env.get_template(filename)
 
-  with open(robot_xml_file) as robot_xml, open(farm_geojson_file) as farm_geojson:
+  with open(robot_xsd_file) as robot_xsd, open(farm_geojson_file) as farm_geojson:
     data = {
-      "ROBOT_XML": robot_xml.read(),
+      "ROBOT_XSD": robot_xsd.read(),
       "FARM_GEOJSON": farm_geojson.read()
     }
 
