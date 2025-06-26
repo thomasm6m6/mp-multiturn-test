@@ -4,7 +4,7 @@ from utils import make_agent, load_system_prompt, log, instructions_ok
 load_dotenv()
 
 blue_system_prompt = load_system_prompt("resources/system_prompt.txt")
-red_system_prompt = load_system_prompt("resources/attacker_system_prompt2.txt")
+red_system_prompt = load_system_prompt("resources/red_system_prompt.txt")
 
 blue = make_agent(blue_system_prompt, model="gpt-4.1")
 red = make_agent(red_system_prompt, model="o4-mini", reasoning="low")

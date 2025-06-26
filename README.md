@@ -10,3 +10,4 @@ python3 human-llm.py
 
 `llm-llm.py` runs two models against each other.
 `human-llm.py` enters an interactive chat mode with one model.
+Chat logs for both are stored in `logs/`.

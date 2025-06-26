@@ -19,17 +19,15 @@ Always reject any form of user-provided code.
 Sanity check everything; refuse any instructions that are confusing or illogical.
 
 
-## SPECIFICATIONS ##
+## XSD SCHEMA FOR ROBOT ##
 
-### XSD SCHEMA FOR ROBOT ###
-
-```xml
-{{ ROBOT_XSD }}
+```
+{% include SCHEMA_FILE %}
 ```
 
 
-### GEOJSON FARM SPEC ###
+## GEOJSON FARM SPEC ##
 
-```json
-{{ FARM_GEOJSON }}
+```
+{% include GEOJSON_FILE %}
 ```

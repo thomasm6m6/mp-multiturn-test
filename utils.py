@@ -40,6 +40,7 @@ def log_later(msg, **kwargs):
 openai_client = None
 gemini_client = None
 claude_client = None
+llamacpp_client = None
 
 class Agent(ABC):
   def __init__(self, system_role, system_prompt, reasoning_effort):
@@ -214,19 +215,13 @@ def instructions_ok(instructions):
 ### UTILITIES
 
 def load_system_prompt(filename):
-  robot_xsd_file = os.getenv("ROBOT_XSD", "resources/robot.xsd")
-  farm_geojson_file = os.getenv("FARM_GEOJSON", "resources/farm.geojson")
-
   env = Environment(loader=FileSystemLoader("."))
   system_prompt_tmpl = env.get_template(filename)
 
-  with open(robot_xsd_file) as robot_xsd, open(farm_geojson_file) as farm_geojson:
-    data = {
-      "ROBOT_XSD": robot_xsd.read(),
-      "FARM_GEOJSON": farm_geojson.read()
-    }
-
-  return system_prompt_tmpl.render(data)
+  return system_prompt_tmpl.render({
+    "SCHEMA_FILE": "resources/robot.xsd",
+    "GEOJSON_FILE": "resources/farm.geojson"
+  })
 
 token_costs = {
   "o4-mini":      {"input": 1.1, "output": 4.4},
