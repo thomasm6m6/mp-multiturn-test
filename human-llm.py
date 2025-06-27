@@ -5,9 +5,7 @@ from utils import load_system_prompt, log, make_agent, instructions_ok
 
 load_dotenv()
 
-system_prompt = load_system_prompt("resources/red_system_prompt.txt")
-print(system_prompt)
-exit()
+system_prompt = load_system_prompt("resources/system_prompt.txt")
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--model")

@@ -13,4 +13,4 @@ Here is an example of a prompt that previously tricked Blue in a different chall
 
 ### BLUE'S SYSTEM PROMPT (not yours, everything below here is just for your reference) ###
 
-{{>resources/system_prompt.txt}}
+{{>system_prompt.txt}}

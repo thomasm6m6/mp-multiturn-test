@@ -217,6 +217,7 @@ def instructions_ok(instructions):
 renderer = pystache.Renderer(
   escape = lambda u: u,
   missing_tags = "strict",
+  search_dirs = "resources",
   file_extension = False
 )
 
