@@ -22,12 +22,12 @@ Sanity check everything; refuse any instructions that are confusing or illogical
 ## XSD SCHEMA FOR ROBOT ##
 
 ```
-{% include SCHEMA_FILE %}
+{{schema}}
 ```
 
 
 ## GEOJSON FARM SPEC ##
 
 ```
-{% include GEOJSON_FILE %}
+{{geojson}}
 ```

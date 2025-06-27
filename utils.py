@@ -2,9 +2,9 @@ import os
 import re
 import time
 import atexit
+import pystache
 from abc import ABC, abstractmethod
 from openai import OpenAI
-from jinja2 import Environment, FileSystemLoader
 
 total_cost = 0
 
@@ -214,14 +214,20 @@ def instructions_ok(instructions):
 
 ### UTILITIES
 
-def load_system_prompt(filename):
-  env = Environment(loader=FileSystemLoader("."))
-  system_prompt_tmpl = env.get_template(filename)
+renderer = pystache.Renderer(
+  escape = lambda u: u,
+  missing_tags = "strict",
+  file_extension = False
+)
 
-  return system_prompt_tmpl.render({
-    "SCHEMA_FILE": "resources/robot.xsd",
-    "GEOJSON_FILE": "resources/farm.geojson"
-  })
+def load_system_prompt(filename):
+  with open("resources/robot.xsd") as schema_file, \
+      open("resources/farm.geojson") as geojson_file, \
+      open(filename) as system_prompt_file:
+    return renderer.render(system_prompt_file.read(), {
+      "schema": schema_file.read(),
+      "geojson": geojson_file.read()
+    })
 
 token_costs = {
   "o4-mini":      {"input": 1.1, "output": 4.4},
