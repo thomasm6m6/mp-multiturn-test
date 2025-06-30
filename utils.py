@@ -3,6 +3,7 @@ import re
 import time
 import atexit
 import pystache
+from typing import Any
 from abc import ABC, abstractmethod
 from openai import OpenAI
 
@@ -34,127 +35,6 @@ def log(msg, file_only=False):
 
 def log_later(msg, **kwargs):
   log_queue.append((msg, kwargs))
-
-### LLMs
-
-openai_client = None
-gemini_client = None
-claude_client = None
-llamacpp_client = None
-
-class Agent(ABC):
-  def __init__(self, system_role, system_prompt, reasoning_effort):
-    self.messages = [{
-      "role": system_role,
-      "content": system_prompt
-    }]
-    self.reasoning_effort = reasoning_effort
-
-  def print_messages(self):
-    for i, msg in enumerate(self.messages):
-      if i > 0: print()
-      print(f"{msg['role']}: {msg['content']}")
-
-  def run(self, prompt, model=None):
-    current_model = model if model else self.default_model
-    response = self.llm(current_model, prompt)
-    self.messages.extend([
-      {"role": "user", "content": prompt},
-      {"role": "assistant", "content": response}
-    ])
-    return response
-
-  def add_message(self, role, msg):
-    self.messages.append({
-      "role": role,
-      "content": msg
-    })
-
-  def get_name(self):
-    s = self.default_model
-    if self.reasoning_effort:
-      s += f" ({self.reasoning_effort})"
-    return s
-
-  def llm(self, model, prompt) -> str:
-    args = {"reasoning_effort": self.reasoning_effort} if self.reasoning_effort else {}
-    response = self.client.chat.completions.create(
-      model=model,
-      messages=self.messages + [{"role": "user", "content": prompt}],
-      **args
-    )
-    log_later(model_costs(model, response.usage.prompt_tokens,
-      response.usage.completion_tokens), file_only=True)
-    content = response.choices[0].message.content
-    if content is None:
-      raise ValueError("LLM returned nil")
-    return content
-
-  @property
-  @abstractmethod
-  def default_model(self) -> str:
-    pass
-
-  @property
-  @abstractmethod
-  def client(self) -> OpenAI:
-    pass
-
-class OpenAIAgent(Agent):
-  def __init__(self, system_prompt, model, reasoning=None, api_key=None):
-    super().__init__("developer", system_prompt, reasoning)
-    self._default_model = model
-    self.reasoning_effort = reasoning
-
-    global openai_client
-    if openai_client is None:
-      args = {"api_key": api_key} if api_key else {}
-      openai_client = OpenAI(**args)
-    self._client = openai_client
-
-  @property
-  def default_model(self) -> str:
-    return self._default_model
-
-  @property
-  def client(self) -> OpenAI:
-    return self._client
-
-class GeminiAgent(Agent):
-  def __init__(self, system_prompt, model, reasoning=None, api_key=None):
-    super().__init__("system", system_prompt, reasoning)
-    self._default_model = model
-    self.reasoning_effort = reasoning
-
-    global gemini_client
-    if gemini_client is None:
-      args = {"api_key": api_key} if api_key else {}
-      gemini_client = OpenAI(
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        **args
-      )
-    self._client = gemini_client
-
-  @property
-  def default_model(self) -> str:
-    return self._default_model
-
-  @property
-  def client(self) -> OpenAI:
-    return self.client
-
-# TODO: class ClaudeAgent(Agent):
-
-def make_agent(system_prompt, provider="openai", api_key=None, model="gpt-4.1-nano", reasoning=None) -> Agent:
-  match provider:
-    case "openai":
-      return OpenAIAgent(system_prompt, model, reasoning, api_key)
-    case "gemini":
-      return GeminiAgent(system_prompt, model, reasoning, api_key)
-    # case "claude":
-    #   return ClaudeAgent(system_prompt, model, reasoning, api_key)
-    case _:
-      raise ValueError(f"Unknown provider '{provider}'")
 
 ### XML PARSING/VALIDATING
 
@@ -231,11 +111,13 @@ def load_system_prompt(filename):
     })
 
 token_costs = {
-  "o4-mini":      {"input": 1.1, "output": 4.4},
-  "o3":           {"input": 2.0, "output": 8.0},
-  "gpt-4.1":      {"input": 2.0, "output": 8.0},
-  "gpt-4.1-mini": {"input": 0.4, "output": 1.6},
-  "gpt-4.1-nano": {"input": 0.1, "output": 0.4},
+  "o4-mini":          {"input": 1.10, "output": 4.40},
+  "o3":               {"input": 2.00, "output": 8.00},
+  "gpt-4.1":          {"input": 2.00, "output": 8.00},
+  "gpt-4.1-mini":     {"input": 0.40, "output": 1.60},
+  "gpt-4.1-nano":     {"input": 0.10, "output": 0.40},
+  "gemini-2.5-pro":   {"input": 1.25, "output": 10.00},
+  "gemini-2.5-flash": {"input": 0.30, "output": 2.50}
 }
 
 def model_costs(model, input_toks, output_toks):
@@ -252,3 +134,109 @@ def model_costs(model, input_toks, output_toks):
     f"Output cost: ${output_cost}\n"
     f"Total cost: ${input_cost + output_cost}"
   )
+
+def parse_model_name(name):
+  provider, model, reasoning = [None] * 3
+  parts = name.split('/')
+  if len(parts) == 1:
+    model = parts[0]
+  elif len(parts) == 2:
+    provider = parts[0]
+    model = parts[1]
+  elif len(parts) == 3:
+    provider = parts[0]
+    model = parts[1]
+    reasoning = parts[2]
+  else:
+    raise ValueError(f"Invalid model name '{model}'")
+
+  return provider, model, reasoning
+
+### LLMs
+
+class Client(ABC):
+  @abstractmethod
+  def create(self, model, messages, reasoning=None) -> str:
+    pass
+
+  @abstractmethod
+  def make_message(self, role, content) -> Any:
+    pass
+
+class OpenAIClient(Client):
+  def __init__(self, base_url=None, api_key=None, roles={"system": "developer"}):
+    self.client = OpenAI(base_url=base_url, api_key=api_key)
+    self._roles = roles
+
+  def create(self, model, messages, reasoning=None):
+    args = {"reasoning_effort": reasoning} if reasoning else {}
+    response = self.client.chat.completions.create(
+      model=model,
+      messages=messages,
+      **args
+    )
+    if response.usage:
+      log_later(model_costs(model, response.usage.prompt_tokens,
+        response.usage.completion_tokens), file_only=True)
+    if not response.choices[0].message.content:
+      raise Exception(f"Chat completion failed: {response}")
+
+    return response.choices[0].message.content
+
+  def make_message(self, role, content):
+    chosen_role = self._roles[role] if role in self._roles else role
+    return {"role": chosen_role, "content": content}
+
+def AnthropicClient(Client):
+  def __init__(self):
+    raise Exception("TODO")
+
+  def create(self, model, messages, reasoning=None):
+    raise Exception("TODO")
+
+  def make_message(self, role, content):
+    raise Exception("TODO")
+
+def make_client(provider):
+  match provider:
+    case "openai":
+      return OpenAIClient()
+    case "gemini":
+      return OpenAIClient(
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        api_key=os.getenv("GEMINI_API_KEY"),
+        roles={"system": "system"})
+    case "claude":
+      return AnthropicClient()
+    case "llamacpp":
+      return OpenAIClient(
+        base_url="http://10.103.96.102:11434/v1",
+        api_key="",
+        roles={"system": "system"})
+    case _:
+      raise ValueError(f"Unrecognized provider '{provider}'")
+
+class Agent:
+  def __init__(self, system_prompt, provider=None, model=None, reasoning=None):
+    self.provider = provider or "openai"
+    self.model = model or "gpt-4.1-nano"
+    self.reasoning = reasoning
+    self.client = make_client(self.provider)
+    self.messages = [self.client.make_message("system", system_prompt)]
+
+  def run(self, prompt, model=None, reasoning=Ellipsis):
+    self.messages.append(self.client.make_message("user", prompt))
+    reasoning_effort = self.reasoning if reasoning is Ellipsis else reasoning
+    response = self.client.create(model or self.model, self.messages, reasoning_effort)
+    self.messages.append(self.client.make_message("assistant", response))
+    return response
+
+  def add_message(self, role, content):
+    msg = self.client.make_message(role, content)
+    self.messages.append(msg)
+
+  def get_name(self):
+    s = self.model
+    if self.reasoning:
+      s += f" ({self.reasoning})"
+    return s

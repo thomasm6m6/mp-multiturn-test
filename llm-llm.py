@@ -1,13 +1,24 @@
+import sys
 from dotenv import load_dotenv
-from utils import make_agent, load_system_prompt, log, instructions_ok
+from utils import Agent, parse_model_name, load_system_prompt, log, instructions_ok
 
 load_dotenv()
 
 blue_system_prompt = load_system_prompt("resources/system_prompt.txt")
 red_system_prompt = load_system_prompt("resources/red_system_prompt.txt")
 
-blue = make_agent(blue_system_prompt, model="gpt-4.1")
-red = make_agent(red_system_prompt, model="o4-mini", reasoning="low")
+blue_provider, blue_model, blue_reasoning = [None] * 3
+red_provider, red_model, red_reasoning = [None] * 3
+try:
+  if len(sys.argv) > 1:
+    blue_provider, blue_model, blue_reasoning = parse_model_name(sys.argv[1])
+  if len(sys.argv) > 2:
+    red_provider, red_model, red_reasoning = parse_model_name(sys.argv[2])
+except Exception as e:
+  exit(str(e))
+
+blue = Agent(blue_system_prompt, provider=blue_provider, model=blue_model, reasoning=blue_reasoning)
+red = Agent(red_system_prompt, provider=red_provider, model=red_model, reasoning=red_reasoning)
 
 log(f"Blue is {blue.get_name()}, Red is {red.get_name()}\n")
 
