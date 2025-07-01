@@ -5,7 +5,7 @@ from utils import Agent, parse_model_name, load_system_prompt, log, instructions
 
 load_dotenv()
 
-system_prompt = load_system_prompt("resources/system_prompt.txt")
+system_prompt = load_system_prompt()
 
 model, provider, reasoning = [None] * 3
 try:
@@ -33,3 +33,6 @@ while True:
       break
   except (EOFError, KeyboardInterrupt):
     break
+
+log("Agent's message history:", file_only=True)
+log(agent.get_messages(), file_only=True)

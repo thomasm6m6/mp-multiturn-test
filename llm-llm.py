@@ -1,11 +1,11 @@
 import sys
 from dotenv import load_dotenv
-from utils import Agent, parse_model_name, load_system_prompt, log, instructions_ok
+from utils import Agent, parse_model_name, load_system_prompt, load_red_system_prompt, log, instructions_ok
 
 load_dotenv()
 
-blue_system_prompt = load_system_prompt("resources/system_prompt.txt")
-red_system_prompt = load_system_prompt("resources/red_system_prompt.txt")
+blue_system_prompt = load_system_prompt()
+red_system_prompt = load_red_system_prompt()
 
 blue_provider, blue_model, blue_reasoning = [None] * 3
 red_provider, red_model, red_reasoning = [None] * 3
@@ -30,6 +30,8 @@ blue.add_message("assistant", blue_output)
 
 log(f"BLUE T0: {blue_output}\n")
 
+blue_won = True
+
 for i in range(5):
   red_output = red.run(blue_output)
   log(f"RED T{i+1}: {red_output}\n")
@@ -38,10 +40,17 @@ for i in range(5):
   log(f"BLUE T{i+1}: {blue_output}\n")
 
   if not instructions_ok(blue_output):
-    log(f"ENDING: instructions not ok. see reason above.\nRed won in {i+1} turns.")
-    exit()
+    blue_won = False
+    break
 
-  if i > 0:
-    print("---\n")
+  print("---\n")
 
-log("ENDING: all instructions valid.\nBlue won.")
+if blue_won:
+  log("ENDING: all instructions valid. Blue won.")
+else:
+  log(f"ENDING: instructions not ok. Red won in {i+1} turns.")
+
+log("\nBlue's message history:", file_only=True)
+log(blue.get_messages(), file_only=True)
+log("\nRed's message history:", file_only=True)
+log(red.get_messages(), file_only=True)

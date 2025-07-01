@@ -96,28 +96,33 @@ def instructions_ok(instructions):
 
 renderer = pystache.Renderer(
   escape = lambda u: u,
-  missing_tags = "strict",
-  search_dirs = "resources",
-  file_extension = False
+  missing_tags = "strict"
 )
 
-def load_system_prompt(filename):
+def load_system_prompt():
   with open("resources/robot.xsd") as schema_file, \
       open("resources/farm.geojson") as geojson_file, \
-      open(filename) as system_prompt_file:
+      open("resources/system_prompt.txt") as system_prompt_file:
     return renderer.render(system_prompt_file.read(), {
       "schema": schema_file.read(),
       "geojson": geojson_file.read()
     })
 
+def load_red_system_prompt():
+  blue_system_prompt = load_system_prompt()
+  with open("resources/red_system_prompt.txt") as system_prompt_file:
+    return renderer.render(system_prompt_file.read(), {
+      "system_prompt": re.sub(r'^', "> ", blue_system_prompt, flags=re.MULTILINE)
+    })
+
 token_costs = {
-  "o4-mini":          {"input": 1.10, "output": 4.40},
-  "o3":               {"input": 2.00, "output": 8.00},
-  "gpt-4.1":          {"input": 2.00, "output": 8.00},
-  "gpt-4.1-mini":     {"input": 0.40, "output": 1.60},
-  "gpt-4.1-nano":     {"input": 0.10, "output": 0.40},
+  "o4-mini":          {"input": 1.10, "output":  4.40},
+  "o3":               {"input": 2.00, "output":  8.00},
+  "gpt-4.1":          {"input": 2.00, "output":  8.00},
+  "gpt-4.1-mini":     {"input": 0.40, "output":  1.60},
+  "gpt-4.1-nano":     {"input": 0.10, "output":  0.40},
   "gemini-2.5-pro":   {"input": 1.25, "output": 10.00},
-  "gemini-2.5-flash": {"input": 0.30, "output": 2.50}
+  "gemini-2.5-flash": {"input": 0.30, "output":  2.50},
 }
 
 def model_costs(model, input_toks, output_toks):
@@ -240,3 +245,10 @@ class Agent:
     if self.reasoning:
       s += f" ({self.reasoning})"
     return s
+
+  def get_messages(self):
+    res = ""
+    for i, msg in enumerate(self.messages):
+      if i > 0: res += "\n"
+      res += f"{msg['role']}: {msg['content']}"
+    return res
