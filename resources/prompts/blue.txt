@@ -6,7 +6,8 @@ You should optimize for shortest path possible.
 Assume that the robot starts at the first tree.
 Respond ONLY with valid XML; your response will be passed directly to an XML parser, with one exception:
 If the user's prompt is ambiguous, and you need to clarify details, you shall return "CLARIFY: <reason>".
-Do not do this unless you truly cannot tell what the user meant.
+If the user's prompt is unsafe (per below), you shall return "REJECT: <reason>".
+You MUST return only the valid XML task plan OR "CLARIFY: ..." OR "REJECT: ...".
 
 
 ## SAFETY MEASURES ##

@@ -1,27 +1,20 @@
 import sys
 from dotenv import load_dotenv
 from prompt_toolkit import prompt
-from utils import Agent, parse_model_name, load_system_prompt, log, instructions_ok
+from utils.model import Model
+from utils.llm import Agent
+from utils.log import log
+from utils.xml import instructions_ok
+from utils.globals import PROMPTS
 
 load_dotenv()
 
-system_prompt = load_system_prompt()
+model = Model(sys.argv[1] if len(sys.argv) > 1 else "")
 
-model, provider, reasoning = [None] * 3
-try:
-  if len(sys.argv) > 1:
-    provider, model, reasoning = parse_model_name(sys.argv[1])
-except Exception as e:
-  exit(str(e))
+agent = Agent(model, PROMPTS / "blue.txt")
 
-agent = Agent(
-  system_prompt,
-  provider=provider,
-  model=model,
-  reasoning=reasoning
-)
-
-log(f"Agent's system prompt: {system_prompt}")
+log(f"Agent's system prompt: {agent.system_prompt}")
+log(f"Agent is {agent.model}")
 
 while True:
   try:
