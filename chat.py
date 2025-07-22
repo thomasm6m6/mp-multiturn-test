@@ -1,120 +1,32 @@
 import sys
 from dotenv import load_dotenv
 from prompt_toolkit import prompt
-from utils.llm import Model, Agent, tools
-from utils.log import log, flush_log
-from utils.xml import instructions_ok, minify_xml, minify_json
-from utils.globals import RESOURCES, PROMPTS
+from llm import LLM
+from utils import Logger, read_prompt, read_file, minify_xml
 
 load_dotenv()
+log = Logger("chat")
 
-model = Model(sys.argv[1] if len(sys.argv) > 1 else "")
+model = sys.argv[1] if len(sys.argv) > 1 else "openai/gpt-4.1-nano"
+if model.count('/') > 1:
+  model, reasoning = model.rsplit('/', maxsplit=1)
+else:
+  reasoning = None
 
-prompt_vars = {
-  # "schema": minify_xml((RESOURCES / "robot.xsd").read_text()),
-  "geojson": minify_json((RESOURCES / "reza_medium_clean.json").read_text()),
-  # "example": minify_xml((RESOURCES / "example.xml").read_text())
-}
-agent_tools = [
-  tools["send_xml"],
-  # tools["request_clarification"],
-  tools["refuse"]
-]
-agent = Agent(model, PROMPTS / "blue_json.txt", prompt_vars, schema={"format": {"type": "json_schema", "name": "robot_schema", "schema": {
-  "type": "object",
-  "additionalProperties": False,
-  "required": ["AtomicTasks"],
-  "properties": {
-    "AtomicTasks": {
-      "type": "array",
-      "items": {
-        "anyOf": [
-          { "$ref": "#/$defs/moveToGPSLocationTask" },
-          { "$ref": "#/$defs/moveToRelativeLocationTask" },
-          { "$ref": "#/$defs/takeThermalPictureTask" }
-        ]
-      }
-    }
-  },
-  "$defs": {
-    "moveToGPSLocationTask": {
-      "type": "object",
-      "properties": {
-        "TaskID": { "type": "string" },
-        "Action": {
-          "type": "string",
-          "enum": ["moveToGPSLocation"]
-        },
-        "Parameters": {
-          "type": "object",
-          "required": ["latitude", "longitude"],
-          "additionalProperties": False,
-          "properties": {
-            "latitude": { "type": "number" },
-            "longitude": { "type": "number" }
-          }
-        }
-      },
-      "required": ["TaskID", "Action", "Parameters"],
-      "additionalProperties": False
-    },
-    "moveToRelativeLocationTask": {
-      "type": "object",
-      "properties": {
-        "TaskID": { "type": "string" },
-        "Action": {
-          "type": "string",
-          "enum": ["moveToRelativeLocation"]
-        },
-        "Parameters": {
-          "type": "object",
-          "required": ["x", "y", "roll", "pitch", "yaw"],
-          "additionalProperties": False,
-          "properties": {
-            "x": { "type": "number" },
-            "y": { "type": "number" },
-            "roll": { "type": "number" },
-            "pitch": { "type": "number" },
-            "yaw": { "type": "number" }
-          }
-        }
-      },
-      "required": ["TaskID", "Action", "Parameters"],
-      "additionalProperties": False
-    },
-    "takeThermalPictureTask": {
-      "type": "object",
-      "properties": {
-        "TaskID": { "type": "string" },
-        "Action": {
-          "type": "string",
-          "enum": ["takeThermalPicture"]
-        },
-        "Parameters": {
-          "type": "object",
-          "required": ["numberOfSamples"],
-          "additionalProperties": False,
-          "properties": {
-            "numberOfSamples": { "type": "number" }
-          }
-        }
-      },
-      "required": ["TaskID", "Action", "Parameters"],
-      "additionalProperties": False
-    }
-  }
-}}})
+schema = read_file("resources/robot.xsd")
+geojson = read_file("resources/reza_medium_clean.json")
+example = read_file("resources/example.xml")
+system_prompt = read_prompt("blue.txt", schema=schema, geojson=geojson, example=example)
+llm = LLM(model, system_prompt)
 
-log(f"Agent's system prompt: {agent.system_prompt}", file_only=True)
-log(f"Agent is {agent.model}")
+log(f"Agent's system prompt: {system_prompt}", quietly=True)
+log(f"Agent is {model}", quietly=True)
 
 while True:
   try:
     user_input = prompt("> ")
-    response = agent.run(user_input)
-    log(f"USER: {user_input}")
-    log(f"AGENT: {response}")
-    flush_log()
+    response = llm.run(user_input)
+    print(response)
     try:
       # instructions_ok(response)
       pass
@@ -124,5 +36,5 @@ while True:
   except (EOFError, KeyboardInterrupt):
     break
 
-log("Agent's message history:", file_only=True)
-log(agent.get_messages(), file_only=True)
+log("Agent's message history:", quietly=True)
+log(llm.get_messages(), quietly=True)
