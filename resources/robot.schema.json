@@ -1,0 +1,275 @@
+{
+  "type": "object",
+  "name": "TaskTemplate",
+  "properties": {
+    "CompositeTaskInformation": {
+      "$ref": "#/$defs/CompositeTaskInformationType"
+    },
+    "Preconditions": {
+      "$ref": "#/$defs/PreconditionsType"
+    },
+    "AtomicTasks": {
+      "$ref": "#/$defs/AtomicTasksType"
+    },
+    "ActionSequence": {
+      "$ref": "#/$defs/ActionSequenceType"
+    },
+    "Outcome": {
+      "$ref": "#/$defs/OutcomeType"
+    },
+    "Exits": {
+      "$ref": "#/$defs/ExitsType"
+    }
+  },
+  "required": [
+    "CompositeTaskInformation",
+    "AtomicTasks",
+    "ActionSequence"
+  ],
+  "$defs": {
+    "CompositeTaskInformationType": {
+      "type": "object",
+      "properties": {
+        "TaskID": { "type": "string" },
+        "TaskDescription": { "type": "string" }
+      },
+      "required": ["TaskID", "TaskDescription"]
+    },
+    "robotActionTypes": {
+      "type": "string",
+      "enum": [
+        "takeThermalPicture",
+        "takeAmbientTemperature",
+        "takeCO2Reading",
+        "moveToGPSLocation",
+        "moveToRelativeLocation"
+      ]
+    },
+    "comparisonType": {
+      "type": "string",
+      "enum": ["lt", "lte", "gt", "gte", "eq", "neq"]
+    },
+    "stateTypes": {
+      "type": "string",
+      "enum": [
+        "atStartingPoint",
+        "atEndPoint",
+        "batteryFull",
+        "batteryCharging",
+        "batteryLow"
+      ]
+    },
+    "exitTypes": {
+      "type": "string",
+      "enum": ["nominal", "faulted"]
+    },
+    "takeThermalPictureType": {
+      "type": "object",
+      "properties": {
+        "numberOfPictures": { "type": "integer" }
+      },
+      "required": ["numberOfPictures"]
+    },
+    "takeAmbientTemperatureType": {
+      "type": "object",
+      "properties": {
+        "numberOfSamples": { "type": "integer" }
+      },
+      "required": ["numberOfSamples"]
+    },
+    "takeCO2ReadingType": {
+      "type": "object",
+      "properties": {
+        "numberOfSamples": { "type": "integer" }
+      },
+      "required": ["numberOfSamples"]
+    },
+    "moveToGPSLocationType": {
+      "type": "object",
+      "properties": {
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "reward": { "type": "number" }
+      },
+      "required": ["latitude", "longitude"]
+    },
+    "moveToRelativeLocationType": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "roll": { "type": "number" },
+        "pitch": { "type": "number" },
+        "yaw": { "type": "number" },
+        "reward": { "type": "number" }
+      },
+      "required": ["x", "y", "roll", "pitch", "yaw"]
+    },
+    "robotActions": {
+      "type": "object",
+      "properties": {
+        "ActionType": { "$ref": "#/$defs/robotActionTypes" }
+      },
+      "required": ["ActionType"],
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": ["takeThermalPicture"],
+              "properties": {
+                "takeThermalPicture": { "$ref": "#/$defs/takeThermalPictureType" }
+              }
+            },
+            {
+              "required": ["takeAmbientTemperature"],
+              "properties": {
+                "takeAmbientTemperature": { "$ref": "#/$defs/takeAmbientTemperatureType" }
+              }
+            },
+            {
+              "required": ["takeCO2Reading"],
+              "properties": {
+                "takeCO2Reading": { "$ref": "#/$defs/takeCO2ReadingType" }
+              }
+            },
+            {
+              "required": ["moveToGPSLocation"],
+              "properties": {
+                "moveToGPSLocation": { "$ref": "#/$defs/moveToGPSLocationType" }
+              }
+            },
+            {
+              "required": ["moveToRelativeLocation"],
+              "properties": {
+                "moveToRelativeLocation": { "$ref": "#/$defs/moveToRelativeLocationType" }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "StateVariablesType": {
+      "type": "object",
+      "properties": {
+        "StateVariable": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "VariableName": { "type": "string" },
+              "VariableValue": { "type": "string" }
+            },
+            "required": ["VariableName", "VariableValue"]
+          }
+        }
+      }
+    },
+    "PreconditionsType": {
+      "type": "object",
+      "properties": {
+        "Precondition": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Condition": { "$ref": "#/$defs/stateTypes" }
+            },
+            "required": ["Condition"]
+          }
+        }
+      }
+    },
+    "AtomicTasksType": {
+      "type": "object",
+      "properties": {
+        "AtomicTask": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "TaskID": { "type": "string" },
+              "TaskDescription": { "type": "string" },
+              "StateVariables": { "$ref": "#/$defs/StateVariablesType" },
+              "Action": { "$ref": "#/$defs/robotActions" },
+              "Preconditions": { "$ref": "#/$defs/PreconditionsType" }
+            },
+            "required": ["TaskID", "TaskDescription", "Action"]
+          }
+        }
+      },
+      "required": ["AtomicTask"]
+    },
+    "ConditionalType": {
+      "type": "object",
+      "properties": {
+        "Comparator": { "$ref": "#/$defs/comparisonType" },
+        "HardValue": { "type": "number" }
+      },
+      "required": ["Comparator", "HardValue"]
+    },
+    "ConditionalActionsType": {
+      "type": "object",
+      "properties": {
+        "Conditional": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConditionalType" }
+        },
+        "Sequence": { "$ref": "#/$defs/ConditionalSequenceType" }
+      },
+      "required": ["Conditional", "Sequence"]
+    },
+    "ConditionalSequenceType": {
+      "type": "object",
+      "properties": {
+        "TaskID": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "ConditionalActions": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConditionalActionsType" },
+          "maxItems": 2
+        }
+      },
+      "anyOf": [
+        { "required": ["TaskID"] },
+        { "required": ["ConditionalActions"] }
+      ]
+    },
+    "ActionSequenceType": {
+      "type": "object",
+      "properties": {
+        "Sequence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ConditionalSequenceType" }
+        }
+      },
+      "required": ["Sequence"]
+    },
+    "OutcomeType": {
+      "type": "object",
+      "properties": {
+        "State": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stateTypes" }
+        }
+      },
+      "required": ["State"]
+    },
+    "ExitsType": {
+      "type": "object",
+      "properties": {
+        "Exit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Type": { "$ref": "#/$defs/exitTypes" }
+            },
+            "required": ["Type"]
+          }
+        }
+      }
+    }
+  }
+}

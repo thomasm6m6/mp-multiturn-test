@@ -27,3 +27,6 @@ def log(msg, file_only=False):
 
 def log_later(msg, **kwargs):
   log_queue.append((msg, kwargs))
+
+def flush_log():
+  LOGFILE.flush()

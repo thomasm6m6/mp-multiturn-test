@@ -30,7 +30,8 @@
             <xs:enumeration value="takeThermalPicture"/>
             <xs:enumeration value="takeAmbientTemperature"/>
             <xs:enumeration value="takeCO2Reading"/>
-            <xs:enumeration value="moveToLocation"/>
+            <xs:enumeration value="moveToGPSLocation"/>
+            <xs:enumeration value="moveToRelativeLocation"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -66,12 +67,25 @@
         </xs:sequence>
     </xs:complexType>
 
-    <!-- Complex type for moveToLocation -->
-    <xs:complexType name="moveToLocationType">
+    <!-- Complex type for moveToGPSLocationType -->
+    <xs:complexType name="moveToGPSLocationType">
         <xs:sequence>
-            <xs:element name="Latitude" type="xs:decimal"/>
-            <xs:element name="Longitude" type="xs:decimal"/>
-            <xs:element name="Reward" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="latitude" type="xs:decimal"/>
+            <xs:element name="longitude" type="xs:decimal"/>
+            <xs:element name="reward" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <!-- Complex type for moveToRelativeLocationType -->
+    <xs:complexType name="moveToRelativeLocationType">
+        <xs:sequence>
+            <xs:element name="x" type="xs:decimal"/>
+            <xs:element name="y" type="xs:decimal"/>
+            <!-- No Z since it's moving in 2D -->
+            <xs:element name="roll" type="xs:decimal"/>
+            <xs:element name="pitch" type="xs:decimal"/>
+            <xs:element name="yaw" type="xs:decimal"/>
+            <xs:element name="reward" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -83,7 +97,8 @@
                 <xs:element name="takeThermalPicture" type="takeThermalPictureType"/>
                 <xs:element name="takeAmbientTemperature" type="takeAmbientTemperatureType"/>
                 <xs:element name="takeCO2Reading" type="takeCO2ReadingType"/>
-                <xs:element name="moveToLocation" type="moveToLocationType"/>
+                <xs:element name="moveToGPSLocation" type="moveToGPSLocationType"/>
+                <xs:element name="moveToRelativeLocation" type="moveToRelativeLocationType"/>
             </xs:choice>
         </xs:sequence>
     </xs:complexType>
@@ -180,7 +195,7 @@
     <!-- ConditionalAction type -->
     <xs:complexType name="ConditionalActionsType">
         <xs:sequence>
-            <xs:element name="Conditional" type="ConditionalType" minOccurs="1" maxOccurs="2"/>
+            <xs:element name="Conditional" type="ConditionalType" minOccurs="1" maxOccurs="unbounded"/>
             <xs:element name="Sequence" type="ConditionalSequenceType" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
@@ -231,4 +246,7 @@
             </xs:element>
         </xs:sequence>
     </xs:complexType>
+
+    <!-- TODO: really unused for now are the above complexTypes. -->
+
 </xs:schema>

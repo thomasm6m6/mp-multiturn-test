@@ -6,6 +6,7 @@ from utils.llm import Agent, Tuner
 from utils.log import log
 from utils.xml import instructions_ok
 from utils.globals import RESOURCES, PROMPTS
+from utils.tools import tools
 
 load_dotenv()
 
@@ -47,7 +48,8 @@ Please translate these instructions into a complete XML TaskTemplate."""
 blue = Agent(blue_model, PROMPTS / "blue.txt", {
   "schema": (RESOURCES / "robot.xsd").read_text(),
   "geojson": (RESOURCES / "farm.geojson").read_text(),
-})
+  "example": (RESOURCES / "example.xml").read_text(),
+}, [tools["xml"], tools["clarify"], tools["refuse"]])
 red = Agent(red_model, PROMPTS / "red.txt", {
   "system_prompt": re.sub(r'^', "> ", (PROMPTS / "blue.txt").read_text(), flags=re.MULTILINE),
   "schema": (RESOURCES / "robot.xsd").read_text()[:1024],

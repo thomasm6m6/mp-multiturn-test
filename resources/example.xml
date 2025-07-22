@@ -1,0 +1,138 @@
+<TaskTemplate xmlns="https://robotics.ucmerced.edu/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://robotics.ucmerced.edu/task resources/robot.xsd">
+    <CompositeTaskInformation>
+        <TaskID>take_pics_first_5_trees</TaskID>
+        <TaskDescription>Take a pic of the first 5 trees</TaskDescription>
+    </CompositeTaskInformation>
+
+    <AtomicTasks>
+        <AtomicTask>
+            <TaskID>move_to_tree_1</TaskID>
+            <TaskDescription>Move to first pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>moveToGPSLocation</ActionType>
+                <moveToGPSLocation>
+                    <latitude>37.266406</latitude>
+                    <longitude>-120.4201625</longitude>
+                </moveToGPSLocation>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>take_thermal_pic_tree_1</TaskID>
+            <TaskDescription>Take thermal picture of first pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>takeThermalPicture</ActionType>
+                <takeThermalPicture>
+                    <numberOfPictures>1</numberOfPictures>
+                </takeThermalPicture>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>move_to_tree_2</TaskID>
+            <TaskDescription>Move to second pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>moveToGPSLocation</ActionType>
+                <moveToGPSLocation>
+                    <latitude>37.2663688</latitude>
+                    <longitude>-120.4201605</longitude>
+                </moveToGPSLocation>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>take_thermal_pic_tree_2</TaskID>
+            <TaskDescription>Take thermal picture of second pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>takeThermalPicture</ActionType>
+                <takeThermalPicture>
+                    <numberOfPictures>1</numberOfPictures>
+                </takeThermalPicture>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>move_to_tree_3</TaskID>
+            <TaskDescription>Move to third pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>moveToGPSLocation</ActionType>
+                <moveToGPSLocation>
+                    <latitude>37.2663281</latitude>
+                    <longitude>-120.4201611</longitude>
+                </moveToGPSLocation>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>take_thermal_pic_tree_3</TaskID>
+            <TaskDescription>Take thermal picture of third pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>takeThermalPicture</ActionType>
+                <takeThermalPicture>
+                    <numberOfPictures>1</numberOfPictures>
+                </takeThermalPicture>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>move_to_tree_4</TaskID>
+            <TaskDescription>Move to fourth pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>moveToGPSLocation</ActionType>
+                <moveToGPSLocation>
+                    <latitude>37.2662902</latitude>
+                    <longitude>-120.4201626</longitude>
+                </moveToGPSLocation>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>take_thermal_pic_tree_4</TaskID>
+            <TaskDescription>Take thermal picture of fourth pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>takeThermalPicture</ActionType>
+                <takeThermalPicture>
+                    <numberOfPictures>1</numberOfPictures>
+                </takeThermalPicture>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>move_to_tree_5</TaskID>
+            <TaskDescription>Move to fifth pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>moveToGPSLocation</ActionType>
+                <moveToGPSLocation>
+                    <latitude>37.2662552</latitude>
+                    <longitude>-120.4201615</longitude>
+                </moveToGPSLocation>
+            </Action>
+        </AtomicTask>
+
+        <AtomicTask>
+            <TaskID>take_thermal_pic_tree_5</TaskID>
+            <TaskDescription>Take thermal picture of fifth pistachio tree</TaskDescription>
+            <Action>
+                <ActionType>takeThermalPicture</ActionType>
+                <takeThermalPicture>
+                    <numberOfPictures>1</numberOfPictures>
+                </takeThermalPicture>
+            </Action>
+        </AtomicTask>
+    </AtomicTasks>
+
+    <ActionSequence>
+        <Sequence>
+            <TaskID>move_to_tree_1</TaskID>
+            <TaskID>take_thermal_pic_tree_1</TaskID>
+            <TaskID>move_to_tree_2</TaskID>
+            <TaskID>take_thermal_pic_tree_2</TaskID>
+            <TaskID>move_to_tree_3</TaskID>
+            <TaskID>take_thermal_pic_tree_3</TaskID>
+            <TaskID>move_to_tree_4</TaskID>
+            <TaskID>take_thermal_pic_tree_4</TaskID>
+            <TaskID>move_to_tree_5</TaskID>
+            <TaskID>take_thermal_pic_tree_5</TaskID>
+        </Sequence>
+    </ActionSequence>
+</TaskTemplate>
