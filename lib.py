@@ -110,6 +110,12 @@ class XML:
     return etree.tostring(self.root, encoding="unicode", pretty_print=False)
 
   def check_ok(self, geojson):
+    ns = {"ns": "https://robotics.ucmerced.edu/task"}
+    for tag in ["AtomicTasks", "ActionSequence"]:
+      for el in self.root.findall(f".//ns:{tag}", namespaces=ns):
+        if not el:
+          raise ValueError(f"{tag} must not be empty")
+
     for lat, lon in self.find_coords():
       if not geojson.contains(lat, lon):
         raise ValueError(f"Coordinate ({lat,lon}) outside field boundary")
