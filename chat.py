@@ -1,40 +1,36 @@
 import sys
 from dotenv import load_dotenv
 from prompt_toolkit import prompt
-from llm import LLM
-from utils import Logger, read_prompt, read_file, minify_xml
+from llm import OpenAILLM
+from lib import Logger, XML, JSON, GeoJSON, read_prompt
 
 load_dotenv()
 log = Logger("chat")
 
-model = sys.argv[1] if len(sys.argv) > 1 else "openai/gpt-4.1-nano"
-if model.count('/') > 1:
-  model, reasoning = model.rsplit('/', maxsplit=1)
-else:
-  reasoning = None
+model = sys.argv[1] if len(sys.argv) > 1 else "gpt-4.1-nano"
 
-schema = read_file("resources/robot.xsd")
-geojson = read_file("resources/reza_medium_clean.json")
-example = read_file("resources/example.xml")
-system_prompt = read_prompt("blue.txt", schema=schema, geojson=geojson, example=example)
-llm = LLM(model, system_prompt)
-
-log(f"Agent's system prompt: {system_prompt}", quietly=True)
-log(f"Agent is {model}", quietly=True)
+schema = XML.parse_file("resources/robot.xsd")
+geojson = GeoJSON.parse_file("resources/reza_medium_clean.geojson")
+example = XML.parse_file("resources/example.xml")
+if not example.validate():
+  raise ValueError("Example XML file does not validate")
+system_prompt = read_prompt("blue.txt", schema=schema.minify(), geojson=geojson.minify(), example=example.minify())
+llm = OpenAILLM(model, system_prompt)
 
 while True:
   try:
     user_input = prompt("> ")
     response = llm.run(user_input)
-    print(response)
+    log(response)
     try:
-      # instructions_ok(response)
-      pass
+      xml = XML.parse(response)
+      xml.check_ok(geojson)
+      xml.to_geojson(copy=True)
     except Exception as e:
-      log(f"ENDING: instructions not ok. Human won. Error: {e}")
-      break
+      log(f"Instructions NOT ok. Human won. Reason: {e}")
   except (EOFError, KeyboardInterrupt):
     break
 
-log("Agent's message history:", quietly=True)
+log(f"{model}'s system prompt and message history:", quietly=True)
+log(llm.get_system_prompt(), quietly=True)
 log(llm.get_messages(), quietly=True)

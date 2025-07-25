@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            targetNamespace="https://robotics.ucmerced.edu/task"
            xmlns="https://robotics.ucmerced.edu/task"
-           xmlns:xsi="https://robotics.ucmerced.edu/task"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            elementFormDefault="qualified">
 
     <!-- Schema defining a ClearPath Husky 4 wheeled robot -->
