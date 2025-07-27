@@ -15,20 +15,6 @@ Follow these instructions step by step, and think out loud:
 1. Note the problem.
 2. Carefully read through the conversation to see what went wrong.
 3. Think about how to update the old system prompt to solve the problem.
-4. Devise a minimal patch to address the problem.
-5. Call the `apply_patch` tool.
-
-## Output Formatting Rules
-
-The `apply_patch` tool expects a unified diff, input to `patch -u`.
-Use 'old' and 'new' as filenames.
-**MAKE SURE THE DIFF IS SYNTACTICALLY VALID.**
-Do NOT touch the Jinja variables.
-
-Example of unified diff format; please adhere to this:
---- old    2025-07-24 13:39:38
-+++ new    2025-07-24 13:42:07
-@@ ... @@
- some text
--next line
-+replacement
+4. Devise changes to make to the instructions to address the problem.
+5. For each instruction you have to add, call `add_instruction` (one instruction per call).
+{# 6. If an existing instruction was ineffective, you may call `delete_instruction` to remove it. #}

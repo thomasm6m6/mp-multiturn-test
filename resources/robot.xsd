@@ -30,7 +30,6 @@
             <xs:enumeration value="takeAmbientTemperature"/>
             <xs:enumeration value="takeCO2Reading"/>
             <xs:enumeration value="moveToGPSLocation"/>
-            <xs:enumeration value="moveToRelativeLocation"/>
         </xs:restriction>
     </xs:simpleType>
 
@@ -75,19 +74,6 @@
         </xs:sequence>
     </xs:complexType>
 
-    <!-- Complex type for moveToRelativeLocationType -->
-    <xs:complexType name="moveToRelativeLocationType">
-        <xs:sequence>
-            <xs:element name="x" type="xs:decimal"/>
-            <xs:element name="y" type="xs:decimal"/>
-            <!-- No Z since it's moving in 2D -->
-            <xs:element name="roll" type="xs:decimal"/>
-            <xs:element name="pitch" type="xs:decimal"/>
-            <xs:element name="yaw" type="xs:decimal"/>
-            <xs:element name="reward" type="xs:decimal" minOccurs="0" maxOccurs="1"/>
-        </xs:sequence>
-    </xs:complexType>
-
     <!-- Complex type for robotActions -->
     <xs:complexType name="robotActions">
         <xs:sequence>
@@ -97,7 +83,6 @@
                 <xs:element name="takeAmbientTemperature" type="takeAmbientTemperatureType"/>
                 <xs:element name="takeCO2Reading" type="takeCO2ReadingType"/>
                 <xs:element name="moveToGPSLocation" type="moveToGPSLocationType"/>
-                <xs:element name="moveToRelativeLocation" type="moveToRelativeLocationType"/>
             </xs:choice>
         </xs:sequence>
     </xs:complexType>

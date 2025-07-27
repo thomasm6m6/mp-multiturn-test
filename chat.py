@@ -1,36 +1,51 @@
 import sys
+import logging
+from rich.console import Console
 from dotenv import load_dotenv
 from prompt_toolkit import prompt
-from llm import OpenAILLM
-from lib import Logger, XML, JSON, GeoJSON, read_prompt
+
+from lib import JSON, GeoJSON, XML, XMLError, read_file, init_cost
+from llm import make_llm, Message, Role
+
+if len(sys.argv) < 2:
+    exit(f'Usage: {sys.argv[0]} blue_model')
 
 load_dotenv()
-log = Logger("chat")
+console = Console(force_terminal=True)
+cost = init_cost()
+logger = logging.getLogger(__name__)
 
-model = sys.argv[1] if len(sys.argv) > 1 else "gpt-4.1-nano"
+logging.basicConfig(filename='logs/chat.log', filemode='a',
+    level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-schema = XML.parse_file("resources/robot.xsd")
-geojson = GeoJSON.parse_file("resources/reza_medium_clean.geojson")
-example = XML.parse_file("resources/example.xml")
+schema = XML.parse_file('resources/robot.xsd')
+field_spec = JSON.parse_file('resources/reza_medium_clean.json')
+geojson = GeoJSON.parse_file('resources/reza_medium_clean.geojson')
+example = XML.parse_file('resources/example.xml')
+
 if not example.validate():
-  raise ValueError("Example XML file does not validate")
-system_prompt = read_prompt("blue.txt", schema=schema.minify(), geojson=geojson.minify(), example=example.minify())
-llm = OpenAILLM(model, system_prompt)
+    raise ValueError('Example XML file does not validate')
+
+variables = {
+    'schema': schema.minify(),
+    'field_spec': field_spec.minify(),
+    'example': example.minify(),
+}
+blue = make_llm(sys.argv[1], Message(read_file('resources/prompts/blue.txt'), render=True, **variables))
 
 while True:
-  try:
-    user_input = prompt("> ")
-    response = llm.run(user_input)
-    log(response)
     try:
-      xml = XML.parse(response)
-      xml.check_ok(geojson)
-      xml.to_geojson(copy=True)
-    except Exception as e:
-      log(f"Instructions NOT ok. Human won. Reason: {e}")
-  except (EOFError, KeyboardInterrupt):
-    break
-
-log(f"{model}'s system prompt and message history:", quietly=True)
-log(llm.get_system_prompt(), quietly=True)
-log(llm.get_messages(), quietly=True)
+        user_input = prompt('> ')
+        response = blue.run(user_input)
+        blue.add_message(Role.USER, user_input)
+        blue.add_message(Role.ASSISTANT, response.message)
+        cost.add_usage(response.usage)
+        console.print('\n', response, '\n', style='blue')
+        try:
+            xml = XML.parse(response.message.text)
+            xml.check_ok(geojson)
+            xml.to_geojson(copy=True)
+        except XMLError as e:
+            print(f"Instructions NOT ok. Human won. Reason: {e}")
+    except (EOFError, KeyboardInterrupt):
+        break
