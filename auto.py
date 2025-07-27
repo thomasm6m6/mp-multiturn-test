@@ -10,19 +10,17 @@ from test import VALID_ATTACKS
 from lib import Tuner, JSON, GeoJSON, XML, XMLError, OutOfBoundsError, init_cost, read_file
 from llm import make_llm, Message, Role, RoleMessage, Response, Tool, ToolArg
 
-cost = init_cost()
-
+LOG_FILE = 'logs/auto.log'
 load_dotenv()
-
+cost = init_cost()
 console = Console(force_terminal=True)
-
 logger = logging.getLogger(__name__)
 
-logging.basicConfig(filename='logs/multi.log', filemode='a',
+logging.basicConfig(filename=LOG_FILE, filemode='a',
     level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-NUM_TURNS = 3  # max number of turns per conversation
-NUM_WINS = 3   # max consecutive wins before ending
+NUM_TURNS = 4  # max number of turns per conversation
+NUM_WINS = 10   # max consecutive wins before ending
 
 if len(sys.argv) < 5:
     exit(f"Usage: {sys.argv[0]} blue_model red_model blue_tuner_model|- red_tuner_model|-")
@@ -57,6 +55,12 @@ red_vars = {
     'extra_instructions': red_extra_instructions,
 }
 
+def send_xml(args):
+    try:
+        return args['xml']
+    except (IndexError, KeyError, ValueError) as e:
+        logger.error(f'send_xml failed: {e}')
+
 def set_scratchpad(args):
     try:
         global red_scratchpad
@@ -65,6 +69,12 @@ def set_scratchpad(args):
     except (IndexError, KeyError, ValueError) as e:
         logger.error(f'set_scratchpad failed: {e}')
 
+blue_tools = {
+    'send_xml': Tool(
+        args={'xml': ToolArg(kind='string', desc='The XML string to send to the robot.')},
+        desc='Send an XML task plan directly to the robot to be executed.',
+        callback=send_xml)
+}
 red_tools = {
     'set_scratchpad': Tool(
         args={'contents': ToolArg(kind='string', desc='Text to populate the scratchpad with.')},
@@ -72,7 +82,7 @@ red_tools = {
         callback=set_scratchpad)
 }
 
-blue = make_llm(sys.argv[1], Message(read_file('resources/prompts/blue.txt'), render=True, **blue_vars))
+blue = make_llm(sys.argv[1], Message(read_file('resources/prompts/blue.txt'), render=True, **blue_vars), blue_tools)
 red = make_llm(sys.argv[2], Message(read_file('resources/prompts/red.txt'), render=True, **red_vars), red_tools)
 blue_tuner = Tuner(make_llm(sys.argv[3], read_file('resources/prompts/blue_tuner.txt')), blue_extra_instructions) if sys.argv[3] != '-' else None
 red_tuner = Tuner(make_llm(sys.argv[4], read_file('resources/prompts/red_tuner.txt')), red_extra_instructions) if sys.argv[4] != '-' else None
@@ -142,8 +152,13 @@ def chat(num_turns: int) -> ChatResult:
         blue_response = blue.run()
         register_blue_response(blue_response, show_thoughts_to_red=True)
 
+        xml_str = None
+        for tool_call in blue_response.message.tool_calls:
+            if tool_call.name == 'send_xml':
+                xml_str = tool_call.output
+                break
         try:
-            xml = XML.parse(blue_response.message.text)
+            xml = XML.parse(xml_str)
             xml.check_ok(geojson)
         except XMLError as e:
             if isinstance(e, OutOfBoundsError):

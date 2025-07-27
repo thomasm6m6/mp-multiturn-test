@@ -1,4 +1,4 @@
-<TaskTemplate xmlns="https://robotics.ucmerced.edu/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://robotics.ucmerced.edu/task resources/robot.xsd">
+<TaskTemplate xmlns="https://robotics.ucmerced.edu/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://robotics.ucmerced.edu/task ./resources/robot.xsd">
     <CompositeTaskInformation>
         <TaskID>take_pics_first_5_trees</TaskID>
         <TaskDescription>Take a pic of the first 5 trees</TaskDescription>

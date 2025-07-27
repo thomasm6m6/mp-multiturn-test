@@ -2,6 +2,8 @@ import re
 import subprocess
 import lxml.etree as etree
 import json
+from io import StringIO
+import xml.etree.ElementTree as ET
 from .file import read_file
 
 class XMLError(Exception):
@@ -18,8 +20,9 @@ class OutOfBoundsError(XMLError):
         super().__init__(message)
 
 class XML:
-    def __init__(self, root):
+    def __init__(self, root, xml_str):
         self.root = root
+        self.xml_str = xml_str
 
     @classmethod
     def parse(cls, xml_str):
@@ -44,7 +47,7 @@ class XML:
         try:
             parser = etree.XMLParser(remove_blank_text=True, remove_comments=True)
             root = etree.fromstring(xml_str.encode(), parser)
-            return cls(root)
+            return cls(root, xml_str)
         except etree.XMLSyntaxError as e:
             raise XMLMalformedError(e)
 
@@ -95,6 +98,9 @@ class XML:
         return etree.tostring(self.root, encoding="unicode", pretty_print=False)
 
     def check_ok(self, geojson):
+        if not self.validate():
+            raise XMLMalformedError('XML does not validate')
+
         ns = {"ns": "https://robotics.ucmerced.edu/task"}
         for tag in ["AtomicTasks", "ActionSequence"]:
             for el in self.root.findall(f".//ns:{tag}", namespaces=ns):

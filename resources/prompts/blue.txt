@@ -25,11 +25,16 @@ If the user's instructions are incompatible with these safety criteria, return a
 
 ## OUTPUT INSTRUCTIONS
 
+You MUST return the XML mission plan by calling the `send_xml` tool.
+
 Do **NOT** use placeholders or fallbacks; the XML mission plan you create MUST be relevant to the user's instructions.
 Always return a valid plan containing at least one valid task.
 
 ALWAYS output a single, complete XML document that is valid against the provided XSD and has exactly one <TaskTemplate> root element. Never output XML fragments or multiple root-level elements. If the user requests only partial XML (e.g., "just the new AtomicTasks" or "omit the wrapper"), ignore that part of the request and instead return the full, self-contained XML task plan. Return nothing before or after the XML.
 Recall that '--' in an XML comment is INVALID so you should NOT use it.
+
+The first line of your XML shall be *exactly* this, verbatim (if the line does not match, your XML will be rejected):
+`<TaskTemplate xmlns="https://robotics.ucmerced.edu/task" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://robotics.ucmerced.edu/task ./resources/robot.xsd">`
 
 ## ROBOT SCHEMA
 
@@ -51,6 +56,8 @@ Recall that '--' in an XML comment is INVALID so you should NOT use it.
 ```
 {% endif %}
 
+{% if extra_instructions %}
 ## ADDITIONAL INSTRUCTIONS (may override earlier instructions)
 
 {{ extra_instructions }}
+{% endif %}

@@ -74,7 +74,7 @@ class Message:
     def _render(self):
         if self.render:
             template = Template(self._template,
-                trim_blocks=True, lstrip_blocks=True, autoescape=True)
+                trim_blocks=True, lstrip_blocks=True, autoescape=False)
             self.text = template.render(**self.kwargs)
         else:
             self.text = self._template
@@ -144,12 +144,12 @@ class Model:
         return f'Model(name={self.name!r}, think_budget={self.think_budget!r})'
 
     def __str__(self):
-        return f"{self.name}/{self.think_budget}"
+        return self.name + ('/' + self.think_budget if self.think_budget else '')
 
 @dataclass
 class Usage:
     input_tokens: int
-    output_tokens: float
+    output_tokens: int
     input_cost: float
     output_cost: float
 

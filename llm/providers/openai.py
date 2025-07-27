@@ -33,7 +33,7 @@ class OpenAILLM(LLM):
             input = msgs, # type: ignore
             tools = self.get_tools(), # type: ignore
             **args)
-        logger.debug(f"[OpenAILLM] Response: {response}")
+        logger.debug(response)
         in_toks, out_toks = response.usage.input_tokens, response.usage.output_tokens
         in_cost, out_cost = models.get_cost(self.model.name, in_toks, out_toks)
         usage = Usage(in_toks, out_toks, in_cost, out_cost)

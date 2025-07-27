@@ -1,5 +1,6 @@
 dotenv
 openai
+ollama
 google-genai
 prompt_toolkit
 pydantic
