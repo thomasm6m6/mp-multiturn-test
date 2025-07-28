@@ -2,8 +2,6 @@ import re
 import subprocess
 import lxml.etree as etree
 import json
-from io import StringIO
-import xml.etree.ElementTree as ET
 
 from .file import read_file
 from .geojson import Coordinate
@@ -25,6 +23,9 @@ class XML:
     def __init__(self, root, xml_str):
         self.root = root
         self.xml_str = xml_str
+
+    def __str__(self):
+        return self.xml_str
 
     @classmethod
     def parse(cls, xml_str):

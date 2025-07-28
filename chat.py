@@ -1,21 +1,17 @@
 import sys
-import time
-import logging
 from rich.console import Console
-from dotenv import load_dotenv
 from prompt_toolkit import prompt
 
 import common as c
 from lib import XML, XMLError, init_cost
 from llm import make_llm, Message, Role
 
-logging.basicConfig(filename=f'logs/chat/{int(time.time())}.log', filemode='a')
-logger = logging.getLogger(__name__)
-
 if len(sys.argv) < 2:
-    exit(f'Usage: {sys.argv[0]} blue_model')
+    print(f'Usage: {sys.argv[0]} blue_model', file=sys.stderr)
+    sys.exit(1)
 
-load_dotenv()
+logger = c.init_logger(__name__)
+
 console = Console(force_terminal=True)
 cost = init_cost()
 

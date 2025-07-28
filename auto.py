@@ -1,8 +1,5 @@
 import sys
-import time
-import logging
 from rich.console import Console
-from dotenv import load_dotenv
 from enum import Enum, auto
 from dataclasses import dataclass
 from tests import tests
@@ -11,18 +8,17 @@ import common as c
 from lib import Tuner, XML, XMLError, OutOfBoundsError, init_cost
 from llm import make_llm, Message, Role, RoleMessage, Response, Tool, ToolArg
 
-logging.basicConfig(filename=f'logs/auto/{int(time.time())}.log', filemode='a')
-logger = logging.getLogger(__name__)
+if len(sys.argv) < 5:
+    print(f'Usage: {sys.argv[0]} blue_model red_model blue_tuner_model|- red_tuner_model|-', file=sys.stderr)
+    sys.exit(1)
 
-load_dotenv()
+logger = c.init_logger(__name__)
+
 cost = init_cost()
 console = Console(force_terminal=True)
 
 NUM_TURNS = 4  # max number of turns per conversation
 NUM_WINS = 10   # max consecutive wins before ending
-
-if len(sys.argv) < 5:
-    exit(f"Usage: {sys.argv[0]} blue_model red_model blue_tuner_model|- red_tuner_model|-")
 
 red_examples = [test.text for test in tests]
 red_scratchpad = ""

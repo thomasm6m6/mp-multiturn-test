@@ -1,15 +1,41 @@
 import logging
+import time
+import sys
+import os
 from pathlib import Path
 
 from lib import XML, JSON, GeoJSON, Boundaries, Coordinate
 from llm import Tool, ToolArg
 from tests import tests
 
+# TODO this really should be integrated with lib/, as should tests.py
+
 PROMPT_DIR = Path('resources') / 'prompts'
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+def init_logger(name):
+    log_filename = os.environ.get('LOGFILE', f'logs/auto/{int(time.time())}.log')
+
+    new_logger = logging.getLogger(name)
+    new_logger.setLevel(logging.DEBUG)
+
+    file_handler = logging.FileHandler(log_filename)
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+
+    console_handler = logging.StreamHandler(sys.stderr)
+    console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+
+    new_logger.addHandler(file_handler)
+    new_logger.addHandler(console_handler)
+
+    logging.getLogger().handlers.clear()
+
+    return new_logger
 
 schema = XML.parse_file('resources/robot.xsd')
 example = XML.parse_file('resources/example.xml')

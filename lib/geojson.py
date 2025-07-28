@@ -1,8 +1,6 @@
 import json
-import math
 from shapely.geometry import shape, Point
 from shapely.ops import unary_union
-from dataclasses import dataclass
 from .json import JSON
 
 class GeoJSON(JSON):

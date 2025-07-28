@@ -1,7 +1,5 @@
-import logging
 import sys
 import time
-from dotenv import load_dotenv
 from rich.console import Console
 
 import common as c
@@ -9,14 +7,13 @@ from lib import XML, XMLError, init_cost
 from llm import make_llm, Message, Response
 from tests import tests, Test
 
-logging.basicConfig(filename=f'logs/auto/{int(time.time())}.log', filemode='a')
-logger = logging.getLogger(__name__)
-
 if len(sys.argv) < 2:
-    exit(f'Usage: {sys.argv[0]} blue_model')
+    print(f'Usage: {sys.argv[0]} blue_model', file=sys.stderr)
+    sys.exit(1)
+
+logger = c.init_logger(__name__)
 
 NUM_TRIES = 3
-load_dotenv()
 console = Console(force_terminal=True, highlight=False)
 start_time = time.time()
 cost = init_cost()
@@ -33,15 +30,15 @@ tools = {'send_xml': c.tools.send_xml()}
 blue = make_llm(sys.argv[1], Message(c.PROMPT_DIR / 'blue_no_geojson.txt', render=True, **variables), tools)
 
 console.print(f"Blue is {blue.model}. Running {len(tests)} tests {NUM_TRIES} times each.")
-logging.info(f"Blue's system prompt: {blue.system_prompt}")
+logger.info(f"Blue's system prompt: {blue.system_prompt}")
 
 def print_pass(test: Test, response: Response):
     console.print(f'  [green]PASS[/green]')
-    logging.info(f'{blue.model} passed test {test.name}\nPROMPT: {test.text!r}\nOUTPUT: {response!r}')
+    logger.info(f'{blue.model} passed test {test.name}\nPROMPT: {test.text!r}\nOUTPUT: {response!r}')
 
 def print_fail(test: Test, response: Response, problem):
     console.print(f'  [red]FAIL[/red]')
-    logging.info(f'{blue.model} failed test {test.name}\nPROBLEM: {problem}\nPROMPT: {test.text!r}\nOUTPUT: {response!r}')
+    logger.info(f'{blue.model} failed test {test.name}\nPROBLEM: {problem}\nPROMPT: {test.text!r}\nOUTPUT: {response!r}')
 
 fails = 0
 for i, test in enumerate(tests):
