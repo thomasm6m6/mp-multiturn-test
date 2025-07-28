@@ -18,6 +18,8 @@ MODELS = {
     "gemma3n:latest": {"provider": "ollama", "thinking": False, "tools": True, "input_cost": 0.0, "output_cost": 0.0},
 }
 
+PROVIDERS = ['openai', 'gemini', 'ollama']
+
 thinking_models = list(filter(lambda model: MODELS[model]['thinking'], MODELS))
 
 def can_think(model):

@@ -32,7 +32,7 @@ class GeminiLLM(LLM):
         if self.tools:
             config_args['tools'] = [types.Tool(function_declarations=[tool]) for tool in self.get_tools()] # type: ignore
 
-        logger.debug(f'Calling generate_content with model={self.model.name}, contents={messages}, system_instruction={self.system_prompt}, and config args: {config_args}')
+        logger.debug(f'Calling gemini with model={self.model!r}, contents={messages!r}, system_instruction={self.system_prompt!r}, config_args={config_args!r}')
         response = self.client.models.generate_content(
             model = self.model.name,
             contents = messages,
@@ -41,7 +41,7 @@ class GeminiLLM(LLM):
                 **config_args
             )
         )
-        logger.debug(response)
+        logger.debug(f'Response from gemini: {response}')
 
         ret_msg = Message(response.text or '')
         thoughts = []
@@ -66,6 +66,7 @@ class GeminiLLM(LLM):
             in_cost, out_cost = models.get_cost(self.model.name, in_toks, out_toks)
             usage = Usage(in_toks, out_toks, in_cost, out_cost)
 
+        logger.debug(response)
         return Response(ret_msg, usage)
 
     def get_tools(self):

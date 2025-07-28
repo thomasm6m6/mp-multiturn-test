@@ -20,13 +20,12 @@ class OllamaLLM(LLM):
 
         messages = [{'role': 'system', 'content': str(self.system_prompt)}]
         messages += [{'role': msg.role, 'content': str(msg.message)} for msg in self.messages]
-        response = self.client.chat(
-            model = self.model.name,
-            messages = messages,
-            tools = self.get_tools(),
-            think = self.model.can_think and self.model.think_budget != 'no_think',
-        )
-        logger.debug(response)
+        tools = self.get_tools()
+        think = self.model.can_think and self.model.think_budget != 'no_think'
+
+        logger.debug(f'Calling ollama with model={self.model!r}, messages={messages!r}, tools={tools!r}, think={think!r}')
+        response = self.client.chat(model=self.model.name, messages=messages, tools=tools, think=think)
+        logger.debug(f'Response from ollama: {response}')
 
         ret_msg = Message(response.message.content or '', thoughts=response.message.thinking)
 
@@ -42,6 +41,7 @@ class OllamaLLM(LLM):
                     output = self.tools[tool.function.name].callback(args)
                     ret_msg.tool_calls.append(ToolCall(tool.function.name, args, output))
 
+        logger.debug(response)
         return Response(ret_msg, usage)
 
     def get_tools(self):

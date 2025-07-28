@@ -27,13 +27,18 @@ class OpenAILLM(LLM):
         msgs = [{"role": msg.role, "content": str(msg.message)} for msg in self.messages]
         if prompt:
             msgs.append({"role": "user", "content": str(prompt)})
+
+        tools = self.get_tools()
+
+        logger.debug(f'Calling openai with model={self.model!r}, instructions={self.system_prompt}, input={msgs!r}, tools={tools!r}, args={args!r}')
         response = self.client.responses.create(
             model = self.model.name,
             instructions = str(self.system_prompt),
             input = msgs, # type: ignore
-            tools = self.get_tools(), # type: ignore
+            tools = tools, # type: ignore
             **args)
-        logger.debug(response)
+        logger.debug(f'Response from openai: {response}')
+
         in_toks, out_toks = response.usage.input_tokens, response.usage.output_tokens
         in_cost, out_cost = models.get_cost(self.model.name, in_toks, out_toks)
         usage = Usage(in_toks, out_toks, in_cost, out_cost)
@@ -49,6 +54,7 @@ class OpenAILLM(LLM):
                     output = self.tools[msg.name].callback(arguments)
                     ret_message.tool_calls.append(ToolCall(msg.name, arguments, output))
 
+        logger.debug(response)
         return Response(ret_message, usage)
 
     def get_tools(self):

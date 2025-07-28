@@ -4,7 +4,9 @@ import lxml.etree as etree
 import json
 from io import StringIO
 import xml.etree.ElementTree as ET
+
 from .file import read_file
+from .geojson import Coordinate
 
 class XMLError(Exception):
     pass
@@ -97,7 +99,7 @@ class XML:
     def minify(self):
         return etree.tostring(self.root, encoding="unicode", pretty_print=False)
 
-    def check_ok(self, geojson):
+    def check_ok(self, *, geojson=None, boundaries=None):
         if not self.validate():
             raise XMLMalformedError('XML does not validate')
 
@@ -107,9 +109,15 @@ class XML:
                 if len(el) == 0:
                     raise XMLMalformedError(f"{tag} must not be empty")
 
+
+        if not geojson and not boundaries:
+            return
+
         for lat, lon in self.find_coords():
-            if not geojson.contains(lat, lon):
-                raise OutOfBoundsError(f"Coordinate ({lat,lon}) outside field boundary")
+            if geojson and not geojson.contains(lat, lon):
+                raise OutOfBoundsError(f"Coordinate ({lat},{lon}) outside field boundary")
+            if boundaries and not boundaries.contains(Coordinate(lat, lon)):
+                raise OutOfBoundsError(f"Coordinate ({lat},{lon}) outside field boundary")
 
     def to_geojson(self, copy=False):
         coords = self.find_coords()

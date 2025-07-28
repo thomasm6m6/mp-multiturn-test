@@ -4,6 +4,7 @@ from typing import Optional
 from types import FunctionType, MethodType
 from jinja2 import Template
 from enum import Enum
+from pathlib import Path
 
 from . import models
 
@@ -61,10 +62,15 @@ class ToolCall:
             return str(self)
 
 class Message:
-    def __init__(self, text: str, *, thoughts: Optional[str] = None,
+    def __init__(self, text_or_path: str | Path, *, thoughts: Optional[str] = None,
                  tool_calls: Optional[list[ToolCall]] = None,
                  render: bool = False, **kwargs):
-        self._template = text
+        if isinstance(text_or_path, Path):
+            with open(text_or_path) as f:
+                self._template = f.read()
+        else:
+            self._template = text_or_path
+
         self.thoughts = thoughts
         self.tool_calls = tool_calls or []
         self.render = render
@@ -129,13 +135,27 @@ class RoleMessage:
     def __repr__(self):
         return f'RoleMessage(role={self.role!r}, message={self.message!r})'
 
+# TODO do something different with this. maybe move it to models.py
 class Model:
     def __init__(self, model: str):
-        if '/' in model:
-            self.name, self.think_budget = model.split('/', maxsplit=1)
+        parts = model.split('/', maxsplit=2)
+        if len(parts) == 3:
+            self.provider, self.name, self.think_budget = parts
+        elif len(parts) == 2:
+            if parts[0] in models.PROVIDERS:
+                self.provider, self.name = parts
+                self.think_budget = None
+            else:
+                self.name, self.think_budget = parts
+                self.provider = None
         else:
-            self.name = model
+            self.name = parts[0]
+            self.provider = models.get(self.name)
             self.think_budget = None
+
+        if not models.get(self.name):
+            raise ValueError(f"Unknown model '{self.name}'")
+
         self.can_think = models.can_think(self.name)
         if self.think_budget and not self.can_think:
             raise ValueError(f"'think' was specified ({self.think_budget}) but model '{self.name}' is not a thinking model")

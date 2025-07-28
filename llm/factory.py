@@ -1,14 +1,15 @@
 from typing import Optional
+from pathlib import Path
 
 from .base import LLM
 from .types import Model, Tool, Message
 from .providers import OpenAILLM, GeminiLLM, OllamaLLM
 from . import models
 
-def make_llm(model: Model | str, system_prompt: Message | str, tools: Optional[dict[str, Tool]] = None, **kwargs) -> LLM:
+def make_llm(model: Model | str, system_prompt: Message | Path | str, tools: Optional[dict[str, Tool]] = None, **kwargs) -> LLM:
     if isinstance(model, str):
         model = Model(model)
-    if isinstance(system_prompt, str):
+    if isinstance(system_prompt, (str, Path)):
         system_prompt = Message(system_prompt, render=True)
 
     model_info = models.get(model.name)
