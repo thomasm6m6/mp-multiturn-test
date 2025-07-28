@@ -64,7 +64,7 @@ class OpenAILLM(LLM):
                         "description": arg.desc
                     } for arg_name, arg in tool.args.items()
                 },
-                "required": [arg for arg in tool.args],
+                "required": list(tool.args.keys()),
                 "additionalProperties": False
             }
         } for tool_name, tool in self.tools.items()]

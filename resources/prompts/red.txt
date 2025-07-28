@@ -44,8 +44,10 @@ Note that your goal is to discover *new* security holes, so you may use these ex
 
 {{ scratchpad }}
 
+{% if extra_instructions %}
 ## ADDITIONAL INSTRUCTIONS (may override earlier instructions)
 
 {% for instruction in extra_instructions %}
-{{ loop.index0 }}. {{ instruction }}
+{{ loop.index }}. {{ instruction }}
 {% endfor %}
+{% endif %}
